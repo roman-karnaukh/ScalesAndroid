@@ -1,14 +1,18 @@
 package com.example.rka.bluesscale;
 
+import android.app.ActionBar;
+import android.app.Activity;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.Gravity;
+import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.GridLayout;
 import android.widget.GridView;
 import android.widget.LinearLayout;
@@ -16,51 +20,60 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-
-import static android.R.attr.data;
-import static android.R.attr.tension;
 
 public class MainActivity extends AppCompatActivity {
 
+    String[] scales = new String[] {"Major", "Minor", "Diatonic"};
+
     String notes[] = new String[] {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
-    int[] scale = new int[] {0, 2, 4, 5, 7, 9, 11};
+    int[] grades = new int[] {0, 2, 4, 5, 7, 9, 11};
+
     String[] majorScaleGrade = new String[] {"", "m","m","","","m","7"};
     String[] minorScaleGrade = new String[] {"m", "","m","m","","","7"};
+    String[] seventhChordsOnMajorScale = new String[] {"maj7", "m7","m7","maj7","7","m7","7b5"};
 
     String[] colors = new String[] {"#BEF684", "#5DD6EE","#5DD6EE","#BEF684","#BEF684","#5DD6EE","#BEF684"};
 
     int tonic = 0;
+    String[] currentGrade = majorScaleGrade;
 
-    public LinearLayout llScale;
-    public GridLayout gScale;
+    LinearLayout llScale;
+    GridLayout gScale;
     GridView gvMain;
+    Spinner spinner;
+    Spinner spScale;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        myToolbar.getBackground().setAlpha(100);
+        setSupportActionBar(myToolbar);
+
         llScale = (LinearLayout) findViewById(R.id.llScale);
         gScale = (GridLayout) findViewById(R.id.gScale);
         gvMain = (GridView) findViewById(R.id.gvMain);
 
+        spinner = (Spinner) findViewById(R.id.spinner2);
+        spScale = (Spinner) findViewById(R.id.spScale);
+
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, notes);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
-        Spinner spinner = (Spinner) findViewById(R.id.spinner2);
         spinner.setAdapter(adapter);
-        spinner.setPrompt("Title");
         spinner.setSelection(tonic);
 
 
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-
-                Toast.makeText(getBaseContext(), "Position = " + position, Toast.LENGTH_SHORT).show();
-
+                tonic = position;
                 addNotesToLayout( getScale(position) );
+                Snackbar.make(findViewById(R.id.base), "Tonic: " + notes[position], Snackbar.LENGTH_SHORT).show();
             }
 
             @Override
@@ -68,6 +81,40 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        ArrayAdapter<String> scaleAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, scales);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+        spScale.setAdapter(scaleAdapter);
+        spScale.setSelection(tonic);
+
+        spScale.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+
+                switch(position){
+                    case 0:
+                        currentGrade = majorScaleGrade;
+                        break;
+                    case 1:
+                        currentGrade = minorScaleGrade;
+                        break;
+                    case 2:
+                        currentGrade = seventhChordsOnMajorScale;
+                        break;
+                    default:
+                        currentGrade = seventhChordsOnMajorScale;
+                }
+
+                addNotesToLayout( getScale(tonic) );
+
+                Snackbar.make(findViewById(R.id.base), "Scale: " + scales[position], Snackbar.LENGTH_SHORT).show();
+
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> arg0) {
+            }
+        });
     }
 
     public void addNotesToLayout(List<String> scale){
@@ -79,27 +126,23 @@ public class MainActivity extends AppCompatActivity {
                 View view = super.getView(position, convertView, parent);
 
                 view.setBackgroundColor(Color.parseColor(colors[position]));
+                view.getBackground().setAlpha(100);
                 return view;
             }
         };
 
         gvMain.setAdapter(adapter);
-        gvMain.setNumColumns(7);
+        gvMain.setNumColumns(3);
         gvMain.setVerticalSpacing(5);
         gvMain.setHorizontalSpacing(5);
-
-
     }
 
     public List<String> getScale(int tonic){
         List<String> newScale = new ArrayList<>();
-        String[] scaleGrade;
 
-
-
-        for(int i = 0; i < scale.length; i++ ){
+        for(int i = 0; i < grades.length; i++ ){
             newScale.add(
-                    notes[step(tonic, scale[i])] + majorScaleGrade[i]
+                    notes[step(tonic, grades[i])] + currentGrade[i]
             );
         }
 
